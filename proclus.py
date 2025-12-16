@@ -10,6 +10,7 @@
 # Date: Thu Mar 12 2020
 
 import numpy as np
+
 # import arffreader as ar
 # import matplotlib.pyplot as plt
 # import ipdb
@@ -20,14 +21,14 @@ from scipy.spatial.distance import cdist
 def greedy(X, S, k):
     # remember that k = B * k here...
 
-    M = [np.random.permutation(S)[0]]                    # M = {m_1}, a random point in S
+    M = [np.random.permutation(S)[0]]  # M = {m_1}, a random point in S
     # print M
 
-    A = np.setdiff1d(S, M)                               # A = S \ M
+    A = np.setdiff1d(S, M)  # A = S \ M
     dists = np.zeros(len(A))
 
     for i in range(len(A)):
-        dists[i] = np.linalg.norm(X[A[i]] - X[M[0]])     # euclidean distance
+        dists[i] = np.linalg.norm(X[A[i]] - X[M[0]])  # euclidean distance
 
     # print dists
 
@@ -52,21 +53,21 @@ def greedy(X, S, k):
 
 def findDimensions(X, k, l, L, Mcurr):
     N, d = X.shape
-    Dis = []        # dimensions picked for the clusters
+    Dis = []  # dimensions picked for the clusters
 
-    Zis = []        # Z for the remaining dimensions
-    Rem = []        # remaining dimensions
-    Mselidx = []    # id of the medoid indexing the dimensions in Zis and Rem
+    Zis = []  # Z for the remaining dimensions
+    Rem = []  # remaining dimensions
+    Mselidx = []  # id of the medoid indexing the dimensions in Zis and Rem
 
     for i in range(len(Mcurr)):
         mi = Mcurr[i]
         # Xij is the average distance from the points in L_i to m_i
         # Xij here is an array, containing the avg dists in each dimension
         Xij = np.abs(X[L[i]] - X[mi]).sum(axis=0) / len(L[i])
-        Yi = Xij.sum() / d                                # average distance over all dimensions
-        Di = []                                           # relevant dimensions for m_i
-        si = np.sqrt(((Xij - Yi)**2).sum() / (d - 1))     # standard deviations
-        Zij = (Xij - Yi) / si                             # z-scores of distances
+        Yi = Xij.sum() / d  # average distance over all dimensions
+        Di = []  # relevant dimensions for m_i
+        si = np.sqrt(((Xij - Yi) ** 2).sum() / (d - 1))  # standard deviations
+        Zij = (Xij - Yi) / si  # z-scores of distances
 
         # pick the smallest two:
         o = np.argsort(Zij)
@@ -102,8 +103,8 @@ def findDimensions(X, k, l, L, Mcurr):
 
 
 def manhattanSegmentalDist(x, y, Ds):
-    """ Compute the Manhattan Segmental Distance between x and y considering
-        the dimensions on Ds."""
+    """Compute the Manhattan Segmental Distance between x and y considering
+    the dimensions on Ds."""
     dist = 0
     for d in Ds:
         dist += np.abs(x[d] - y[d])
@@ -127,15 +128,19 @@ def assignPoints(X, Mcurr, Dis):
 
     return assigns
 
+
 def assignPoints_v2(X, Mcurr, Dis):
-    """ This is a faster implementation of former assignPoints().
+    """This is a faster implementation of former assignPoints().
     However, it might be more expensive in terms of memory footprint
-    because it works on the entire dissimilarity matrix, yet in a vectorised (fast) manner. """
+    because it works on the entire dissimilarity matrix, yet in a vectorised (fast) manner.
+    """
     # preallocate points-vs-medoids dissimilarity matrix
     D = np.zeros((X.shape[0], len(Mcurr)))
     # compute Manhattan Segmental Distance
     for i in range(len(Mcurr)):
-        D[:, i] = cdist(X[:, Dis[i]], X[Mcurr[i], Dis[i]].reshape(1, -1), 'cityblock').ravel() / len(Dis[i])
+        D[:, i] = cdist(
+            X[:, Dis[i]], X[Mcurr[i], Dis[i]].reshape(1, -1), "cityblock"
+        ).ravel() / len(Dis[i])
     # find closest medoid ID
     assigns = np.argmin(D, axis=1)
     assigns = np.array([Mcurr[i] for i in assigns])
@@ -147,8 +152,8 @@ def evaluateClusters(X, assigns, Dis, Mcurr):
     upperSum = 0.0
 
     for i in range(len(Mcurr)):
-        C = X[np.where(assigns == Mcurr[i])[0]]        # points in cluster M_i
-        Cm = C.sum(axis=0) / C.shape[0]                # cluster centroid
+        C = X[np.where(assigns == Mcurr[i])[0]]  # points in cluster M_i
+        Cm = C.sum(axis=0) / C.shape[0]  # cluster centroid
         Ysum = 0.0
 
         for d in Dis[i]:
@@ -178,21 +183,23 @@ def computeBadMedoids(X, assigns, Dis, Mcurr, minDeviation):
     return Mbad
 
 
-def proclus(X, k=2, l=3, minDeviation=0.1, A=30, B=3, niters=30, seed=1234, verboseFlag=True):
-    """ Run PROCLUS on a database to obtain a set of clusters and
-        dimensions associated with each one.
+def proclus(
+    X, k=2, l=3, minDeviation=0.1, A=30, B=3, niters=30, seed=1234, verboseFlag=True
+):
+    """Run PROCLUS on a database to obtain a set of clusters and
+    dimensions associated with each one.
 
-        Parameters:
-        ----------
-        - X:                the data set
-        - k:                the desired number of clusters
-        - l:                average number of dimensions per cluster
-        - minDeviation:     for selection of bad medoids
-        - A:                constant for initial set of medoids
-        - B:                a smaller constant than A for the final set of medoids
-        - niters:           maximum number of iterations for the second phase
-        - seed:             seed for the RNG
-        - verboseFlag:      True/False flag for verbosity
+    Parameters:
+    ----------
+    - X:                the data set
+    - k:                the desired number of clusters
+    - l:                average number of dimensions per cluster
+    - minDeviation:     for selection of bad medoids
+    - A:                constant for initial set of medoids
+    - B:                a smaller constant than A for the final set of medoids
+    - niters:           maximum number of iterations for the second phase
+    - seed:             seed for the RNG
+    - verboseFlag:      True/False flag for verbosity
     """
     np.random.seed(seed)
 
@@ -211,7 +218,7 @@ def proclus(X, k=2, l=3, minDeviation=0.1, A=30, B=3, niters=30, seed=1234, verb
     # first find a superset of the set of k medoids by random sampling
     idxs = np.arange(N)
     np.random.shuffle(idxs)
-    S = idxs[0:(A * k)]
+    S = idxs[0 : (A * k)]
     M = greedy(X, S, B * k)
 
     ###############################
@@ -221,15 +228,15 @@ def proclus(X, k=2, l=3, minDeviation=0.1, A=30, B=3, niters=30, seed=1234, verb
     BestObjective = np.inf
 
     # choose a random set of k medoids from M:
-    Mcurr = np.random.permutation(M)[0:k]   # M current
-    Mbest = None                            # Best set of medoids found
+    Mcurr = np.random.permutation(M)[0:k]  # M current
+    Mbest = None  # Best set of medoids found
 
-    D = squareform(pdist(X))                # precompute the euclidean distance matrix
+    D = squareform(pdist(X))  # precompute the euclidean distance matrix
 
-    it = 0                                  # iteration counter
-    L = []                                  # locality sets of the medoids, i.e., points within delta_i of m_i.
-    Dis = []                                # important dimensions for each cluster
-    assigns = []                            # cluster membership assignments
+    it = 0  # iteration counter
+    L = []  # locality sets of the medoids, i.e., points within delta_i of m_i.
+    Dis = []  # important dimensions for each cluster
+    assigns = []  # cluster membership assignments
 
     while True:
         it += 1
@@ -251,7 +258,7 @@ def proclus(X, k=2, l=3, minDeviation=0.1, A=30, B=3, niters=30, seed=1234, verb
         # evaluate the clusters:
         ObjectiveFunction = evaluateClusters(X, assigns, Dis, Mcurr)
 
-        badM = []    # bad medoids
+        badM = []  # bad medoids
 
         Mold = Mcurr.copy()
 
@@ -329,10 +336,10 @@ def proclus(X, k=2, l=3, minDeviation=0.1, A=30, B=3, niters=30, seed=1234, verb
 
 
 def computeBasicAccuracy(pred, expect):
-    """ Computes the clustering accuracy by assigning
-        a class to each cluster based on majority
-        voting and then comparing with the expected
-        class. """
+    """Computes the clustering accuracy by assigning
+    a class to each cluster based on majority
+    voting and then comparing with the expected
+    class."""
 
     if len(pred) != len(expect):
         raise Exception("pred and expect must have the same length.")
