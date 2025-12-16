@@ -14,6 +14,7 @@ import numpy as np
 # import matplotlib.pyplot as plt
 # import ipdb
 from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import cdist
 
 
 def greedy(X, S, k):
@@ -124,6 +125,20 @@ def assignPoints(X, Mcurr, Dis):
 
         assigns[i] = best
 
+    return assigns
+
+def assignPoints_v2(X, Mcurr, Dis):
+    """ This is a faster implementation of former assignPoints().
+    However, it might be more expensive in terms of memory footprint
+    because it works on the entire dissimilarity matrix, yet in a vectorised (fast) manner. """
+    # preallocate points-vs-medoids dissimilarity matrix
+    D = np.zeros((X.shape[0], len(Mcurr)))
+    # compute Manhattan Segmental Distance
+    for i in range(len(Mcurr)):
+        D[:, i] = cdist(X[:, Dis[i]], X[Mcurr[i], Dis[i]].reshape(1, -1), 'cityblock').ravel() / len(Dis[i])
+    # find closest medoid ID
+    assigns = np.argmin(D, axis=1)
+    assigns = np.array([Mcurr[i] for i in assigns])
     return assigns
 
 
