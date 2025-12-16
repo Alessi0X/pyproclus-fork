@@ -1,9 +1,11 @@
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
+
 import numpy as np
 cimport numpy as np
 
 DTYPE = np.double
 
-ctypedef np.long_t DTYPE_L
+ctypedef np.int64_t DTYPE_L
 ctypedef np.double_t DTYPE_D
 
 def computeAdjustedRandIndex(np.ndarray[DTYPE_D, ndim = 1] pred, np.ndarray[DTYPE_L, ndim = 1] expect):
@@ -14,7 +16,7 @@ def computeAdjustedRandIndex(np.ndarray[DTYPE_D, ndim = 1] pred, np.ndarray[DTYP
 
 	cdef int N = pred.shape[0]
 
-	cdef int M = N * (N - 1) / 2
+	cdef int M = N * (N - 1) // 2
 
 	cdef int a = 0 # number of pairs that belong to the same class and the same cluster
 	cdef b = 0 # number of pairs that belong to the same class but different clusters

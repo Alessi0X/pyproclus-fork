@@ -1,4 +1,7 @@
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized
 build
 __pycache__/
 *.pyc
+
+# DLL files
+*.so
