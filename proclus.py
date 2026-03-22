@@ -9,13 +9,11 @@
 # Python3 Porting: Alessio Martino <alessio.martino@uniroma1.it>
 # Date: Thu Mar 12 2020
 
-import numpy as np
-
 # import arffreader as ar
 # import matplotlib.pyplot as plt
 # import ipdb
-from scipy.spatial.distance import pdist, squareform
-from scipy.spatial.distance import cdist
+import numpy as np
+from scipy.spatial.distance import pdist, squareform, cdist
 
 
 def greedy(X, S, k):
@@ -111,39 +109,42 @@ def manhattanSegmentalDist(x, y, Ds):
     return dist / len(Ds)
 
 
-def assignPoints(X, Mcurr, Dis):
+def assignPoints(X, Mcurr, Dis, use_fast=True):
+    """Assign points to the closest medoid.
 
-    assigns = np.ones(X.shape[0]) * -1
-
-    for i in range(X.shape[0]):
-        minDist = np.inf
-        best = -1
-        for j in range(len(Mcurr)):
-            dist = manhattanSegmentalDist(X[i], X[Mcurr[j]], Dis[j])
-            if dist < minDist:
-                minDist = dist
-                best = Mcurr[j]
-
-        assigns[i] = best
-
-    return assigns
-
-
-def assignPoints_v2(X, Mcurr, Dis):
-    """This is a faster implementation of former assignPoints().
-    However, it might be more expensive in terms of memory footprint
-    because it works on the entire dissimilarity matrix, yet in a vectorised (fast) manner.
+    use_fast=True (default): vectorized (cdist) path.
+    use_fast=False: loops over points/medoids with explicit distance calc.
     """
-    # preallocate points-vs-medoids dissimilarity matrix
-    D = np.zeros((X.shape[0], len(Mcurr)))
-    # compute Manhattan Segmental Distance
-    for i in range(len(Mcurr)):
-        D[:, i] = cdist(
-            X[:, Dis[i]], X[Mcurr[i], Dis[i]].reshape(1, -1), "cityblock"
-        ).ravel() / len(Dis[i])
-    # find closest medoid ID
-    assigns = np.argmin(D, axis=1)
-    assigns = np.array([Mcurr[i] for i in assigns], dtype=np.float64)
+    if use_fast:
+        """This is a faster implementation of former assignPoints().
+        However, it might be more expensive in terms of memory footprint
+        because it works on the entire dissimilarity matrix, yet in a vectorised (fast) manner.
+        """
+        D = np.zeros((X.shape[0], len(Mcurr)))
+        for i in range(len(Mcurr)):
+            D[:, i] = cdist(
+                X[:, Dis[i]], X[Mcurr[i], Dis[i]].reshape(1, -1), "cityblock"
+            ).ravel() / len(Dis[i])
+
+        assigns = np.argmin(D, axis=1)
+        assigns = np.array([Mcurr[i] for i in assigns], dtype=np.float64)
+
+    else:
+        """This is the original implementation of assignPoints(), which uses explicit loops.
+        It is less efficient than the vectorised version, but it has a smaller memory footprint.
+        """
+        assigns = np.ones(X.shape[0]) * -1
+        for i in range(X.shape[0]):
+            minDist = np.inf
+            best = -1
+            for j in range(len(Mcurr)):
+                dist = manhattanSegmentalDist(X[i], X[Mcurr[j]], Dis[j])
+                if dist < minDist:
+                    minDist = dist
+                    best = Mcurr[j]
+
+            assigns[i] = best
+
     return assigns
 
 
@@ -184,7 +185,16 @@ def computeBadMedoids(X, assigns, Dis, Mcurr, minDeviation):
 
 
 def proclus(
-    X, k=2, l=3, minDeviation=0.1, A=30, B=3, niters=30, seed=1234, verboseFlag=True
+    X,
+    k=2,
+    l=3,
+    minDeviation=0.1,
+    A=30,
+    B=3,
+    niters=30,
+    seed=1234,
+    verboseFlag=True,
+    use_fast=True,
 ):
     """Run PROCLUS on a database to obtain a set of clusters and
     dimensions associated with each one.
@@ -200,6 +210,7 @@ def proclus(
     - niters:           maximum number of iterations for the second phase
     - seed:             seed for the RNG
     - verboseFlag:      True/False flag for verbosity
+    - use_fast:        True/False flag to use the faster (vectorised) implementation of assignPoints().
     """
     np.random.seed(seed)
 
@@ -253,7 +264,7 @@ def proclus(
         Dis = findDimensions(X, k, l, L, Mcurr)
 
         # form the clusters:
-        assigns = assignPoints(X, Mcurr, Dis)
+        assigns = assignPoints(X, Mcurr, Dis, use_fast=use_fast)
 
         # evaluate the clusters:
         ObjectiveFunction = evaluateClusters(X, assigns, Dis, Mcurr)
@@ -304,7 +315,7 @@ def proclus(
         L.append(np.where(assigns == mi)[0])
 
     Dis = findDimensions(X, k, l, L, Mcurr)
-    assigns = assignPoints(X, Mcurr, Dis)
+    assigns = assignPoints(X, Mcurr, Dis, use_fast=use_fast)
 
     # handle outliers:
 
