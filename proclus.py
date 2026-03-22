@@ -143,7 +143,7 @@ def assignPoints_v2(X, Mcurr, Dis):
         ).ravel() / len(Dis[i])
     # find closest medoid ID
     assigns = np.argmin(D, axis=1)
-    assigns = np.array([Mcurr[i] for i in assigns])
+    assigns = np.array([Mcurr[i] for i in assigns], dtype=np.float64)
     return assigns
 
 
