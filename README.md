@@ -10,8 +10,10 @@ PROCLUS is a subspace clustering algorithm that finds clusters in different subs
 
 - [NumPy](http://www.numpy.org/)
 - [SciPy](http://www.scipy.org/)
-- [Matplotlib](http://matplotlib.org/) (for running the examples)
+- [Matplotlib](http://matplotlib.org/) (optional, for running the examples)
 - [Cython](http://cython.org/) (optional, for building the Adjusted Rand Index evaluator)
+
+Tested with all currently supported (i.e., non end-of-life) Python 3 versions: 3.10, 3.11, 3.12, 3.13, 3.14.
 
 ## Installation
 
@@ -62,7 +64,7 @@ The [Adjusted Rand Index](http://en.wikipedia.org/wiki/Rand_index#Adjusted_Rand_
 
 ## Reference
 
-Charu C. Aggarwal, Joel L. Wolf, Philip S. Yu, Cecilia Procopiuc, and Jong Soo Park. 1999. **Fast algorithms for projected clustering.** In Proceedings of the 1999 ACM SIGMOD international conference on Management of data (SIGMOD '99). ACM, New York, NY, USA, 61-72. DOI=[10.1145/304182.304188](http://dl.acm.org/citation.cfm?id=304188)
+Charu C. Aggarwal, Joel L. Wolf, Philip S. Yu, Cecilia Procopiuc, and Jong Soo Park. 1999. Fast algorithms for projected clustering. In _Proceedings of the 1999 ACM SIGMOD international conference on Management of data (SIGMOD '99)_. ACM, New York, NY, USA, 61-72. DOI:[10.1145/304182.304188](https://dl.acm.org/doi/10.1145/304181.304188)
 
 ## License
 
@@ -70,6 +72,10 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 ## Acknowledgments
 
-This is a fork with Python 3 compatibility updates. Original implementation by [Cassio M. M. Pereira](https://github.com/cmmp). 
+This is a fork of the original [pyproclus](https://github.com/cmmp/pyproclus) library by [Cassio M. M. Pereira](https://github.com/cmmp). The original library provided the foundational functionality, but it soon became outdated. This fork adds:
 
-Original repository: [https://github.com/cmmp/pyproclus](https://github.com/cmmp/pyproclus)
+- Python 3 compatibility updates
+- Updated routines for faster execution
+- Some code refactoring for better readability and maintainability
+
+Shout-out to Cassio Pareira for creating the original `pyproclus` library!
